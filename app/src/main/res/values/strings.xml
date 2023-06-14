@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Sport club</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="gender">Gender</string>
+    <string name="sport">Sport</string>
+</resources>
