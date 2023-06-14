@@ -15,11 +15,14 @@ import androidx.loader.app.LoaderManager;
 import androidx.loader.content.CursorLoader;
 import androidx.loader.content.Loader;
 
+import android.content.ContentUris;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -47,6 +50,14 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         });
         memberCursorAdapter = new MemberCursorAdapter(this, null, false);
         listViewMembers.setAdapter(memberCursorAdapter);
+
+        listViewMembers.setOnItemClickListener((adapterView, view, position, id) -> {
+            Intent intent = new Intent(MainActivity.this, AddMemberActivity.class);
+            Uri currentMemberUri = ContentUris.withAppendedId(CONTENT_URI, id);
+            intent.setData(currentMemberUri);
+            startActivity(intent);
+        });
+
         LoaderManager loaderManager = LoaderManager.getInstance(this);
         loaderManager.initLoader(MEMBER_LOADER, null, this);
     }

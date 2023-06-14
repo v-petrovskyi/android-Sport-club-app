@@ -48,7 +48,6 @@ public class MemberCursorAdapter extends CursorAdapter {
         int currentGender = cursor.getInt(genderIndex);
         String currentSport = cursor.getString(sportIndex);
 
-
         tvId.setText(String.valueOf(currentId));
         tvFirstName.setText(currentFirstName);
         tvLastName.setText(currentLastName);
