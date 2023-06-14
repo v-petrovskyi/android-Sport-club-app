@@ -8,62 +8,65 @@ import static training.android.sportclub.data.ClubOlympusContract.MemberEntry.KE
 import static training.android.sportclub.data.ClubOlympusContract.MemberEntry.TABLE_NAME;
 import static training.android.sportclub.data.ClubOlympusContract.MemberEntry._ID;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
 
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import training.android.sportclub.data.ClubOlympusContract;
+import training.android.sportclub.data.MemberCursorAdapter;
 
-public class MainActivity extends AppCompatActivity {
-    private TextView dataTextView;
+public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+    private ListView listViewMembers;
+    private static final int MEMBER_LOADER = 123;
+    MemberCursorAdapter memberCursorAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        dataTextView = findViewById(R.id.dataTextView);
+        listViewMembers = findViewById(R.id.listViewMembers);
 
         FloatingActionButton floatingActionButton = findViewById(R.id.floatingActionButton);
         floatingActionButton.setOnClickListener(view -> {
             Intent intent = new Intent(MainActivity.this, AddMemberActivity.class);
             startActivity(intent);
         });
+        memberCursorAdapter = new MemberCursorAdapter(this, null, false);
+        listViewMembers.setAdapter(memberCursorAdapter);
+        LoaderManager loaderManager = LoaderManager.getInstance(this);
+        loaderManager.initLoader(MEMBER_LOADER, null, this);
+    }
+
+
+    @NonNull
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
+        String[] projection = {_ID, KEY_FIRST_NAME, KEY_LAST_NAME, KEY_GENDER, KEY_SPORT};
+
+        return new CursorLoader(this, CONTENT_URI, projection, null, null, null);
     }
 
     @Override
-    protected void onStart() {
-        super.onStart();
-        displayData();
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
+        memberCursorAdapter.swapCursor(data);
     }
 
-    private void displayData() {
-        String[] projection = {_ID, KEY_FIRST_NAME, KEY_LAST_NAME, KEY_GENDER, KEY_SPORT};
-        Cursor cursor = getContentResolver().query(CONTENT_URI, projection, null, null);
-        dataTextView.setText("all members\n\n");
-        dataTextView.append(_ID + " " + KEY_FIRST_NAME + " " + KEY_LAST_NAME + " " + KEY_GENDER + " " + KEY_SPORT);
-        int idIndex = cursor.getColumnIndex(_ID);
-        int firstNameIndex = cursor.getColumnIndex(KEY_FIRST_NAME);
-        int lastNameIndex = cursor.getColumnIndex(KEY_LAST_NAME);
-        int genderIndex = cursor.getColumnIndex(KEY_GENDER);
-        int sportIndex = cursor.getColumnIndex(KEY_SPORT);
-
-        while (cursor.moveToNext()) {
-            int currentId = cursor.getInt(idIndex);
-            String currentFirstName = cursor.getString(firstNameIndex);
-            String currentLastName = cursor.getString(lastNameIndex);
-            int currentGender = cursor.getInt(genderIndex);
-            String currentSport = cursor.getString(sportIndex);
-
-            dataTextView.append("\n" + currentId + " " + currentFirstName+ " " +currentLastName+ " " +currentGender+ " " +currentSport);
-        }
-        cursor.close();
+    @Override
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+        memberCursorAdapter.swapCursor(null);
     }
 }

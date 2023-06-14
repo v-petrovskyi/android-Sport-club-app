@@ -63,6 +63,7 @@ public class OlympusContentProvider extends ContentProvider {
             default:
                 throw new IllegalArgumentException("Can't query incorrect URI: " + uri);
         }
+        cursor.setNotificationUri(getContext().getContentResolver(), uri);
         return cursor;
     }
 
@@ -110,6 +111,7 @@ public class OlympusContentProvider extends ContentProvider {
                     Log.e("insertMethod", "Insertion of data in the table failed for " + uri);
                     return null;
                 }
+                getContext().getContentResolver().notifyChange(uri, null);
                 return ContentUris.withAppendedId(uri, id);
             default:
                 throw new IllegalArgumentException("Insertion of data in the table failed for " + uri);
@@ -119,18 +121,25 @@ public class OlympusContentProvider extends ContentProvider {
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection, @Nullable String[] selectionArgs) {
         SQLiteDatabase db = dbOpenHelper.getWritableDatabase();
+        int rawDeleted;
 
         int match = uriMatcher.match(uri);
         switch (match) {
             case MEMBERS:
-                return db.delete(TABLE_NAME, selection, selectionArgs);
+                rawDeleted = db.delete(TABLE_NAME, selection, selectionArgs);
+                break;
             case MEMBER_ID:
                 selection = _ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
-                return db.delete(TABLE_NAME, selection, selectionArgs);
+                rawDeleted = db.delete(TABLE_NAME, selection, selectionArgs);
+                break;
             default:
                 throw new IllegalArgumentException("Can't delete this URI" + uri);
         }
+        if (rawDeleted != 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return rawDeleted;
     }
 
     @Override
@@ -166,15 +175,22 @@ public class OlympusContentProvider extends ContentProvider {
         SQLiteDatabase db = dbOpenHelper.getWritableDatabase();
 
         int match = uriMatcher.match(uri);
+        int rowUpdated;
         switch (match) {
             case MEMBERS:
-                return db.update(TABLE_NAME, contentValues, selection, selectionArgs);
+                rowUpdated = db.update(TABLE_NAME, contentValues, selection, selectionArgs);
+                break;
             case MEMBER_ID:
                 selection = _ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
-                return db.update(TABLE_NAME, contentValues, selection, selectionArgs);
+                rowUpdated = db.update(TABLE_NAME, contentValues, selection, selectionArgs);
+                break;
             default:
                 throw new IllegalArgumentException("Can't delete update URI" + uri);
         }
+        if (rowUpdated != 0) {
+            getContext().getContentResolver().notifyChange(uri, null);
+        }
+        return rowUpdated;
     }
 }
